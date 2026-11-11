@@ -19,6 +19,7 @@
   <header class="topbar">
     <h1>🎈 BdayParty</h1>
     <div class="topbar-actions">
+      <button id="btn-tiers" class="icon-btn" aria-label="About tiers">ℹ️</button>
       <button id="btn-settings" class="icon-btn" aria-label="Settings & import">⚙️</button>
     </div>
   </header>
@@ -60,7 +61,7 @@
         <label>Year <input name="year" type="number" min="1900" max="2100" placeholder="optional" inputmode="numeric"></label>
       </div>
       <fieldset class="tiers">
-        <legend>Tier</legend>
+        <legend>Tier <button type="button" class="link-btn" id="btn-tiers-help">What do tiers do?</button></legend>
         <label><input type="radio" name="tier" value="1"><span><b>1</b> Must remember</span></label>
         <label><input type="radio" name="tier" value="2"><span><b>2</b> Important (am + pm)</span></label>
         <label><input type="radio" name="tier" value="3"><span><b>3</b> Once a day</span></label>
@@ -73,6 +74,20 @@
         <span class="spacer"></span>
         <button type="button" id="btn-cancel">Cancel</button>
         <button type="submit" id="btn-save" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Tier descriptions -->
+  <dialog id="tiers-dialog">
+    <form method="dialog">
+      <h2>About tiers</h2>
+      <p class="hint">A tier sets how loudly you're reminded of someone's birthday. Change a person's tier by tapping their card.</p>
+      <div id="tiers-list"></div>
+      <p class="hint">📅 Calendar alerts only reach your phone after you use <b>⚙️ → Export to Calendar</b>. Export again after you change tiers or alert times.</p>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button value="close" class="primary">Got it</button>
       </div>
     </form>
   </dialog>

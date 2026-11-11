@@ -49,6 +49,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #fff;
 }
+.topbar-actions { display: flex; gap: 8px; }
 .topbar h1 { margin: 0; font-size: 1.25rem; letter-spacing: .2px; }
 .icon-btn {
   background: rgba(255, 255, 255, .18); border: 0; border-radius: 12px;
@@ -204,3 +205,22 @@ ul.changes s { color: var(--muted); }
   z-index: 100;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- tier descriptions ---------- */
+.tier-info {
+  border: 1px solid var(--border); border-left: 5px solid var(--tc);
+  border-radius: 12px; padding: 10px 12px;
+}
+.tier-info.tier-1 { --tc: var(--t1); }
+.tier-info.tier-2 { --tc: var(--t2); }
+.tier-info.tier-3 { --tc: var(--t3); }
+.tier-info.tier-4 { --tc: var(--t4); }
+.tier-info-head { display: flex; align-items: center; gap: 8px; }
+.tier-count { margin-left: auto; font-size: .85rem; }
+.tier-info p { margin: 6px 0 0; font-size: .92rem; }
+.tier-label { font-weight: 600; color: var(--muted); }
+#tiers-list { display: flex; flex-direction: column; gap: 10px; }
+dialog button.link-btn {
+  border: 0; background: none; padding: 0 0 0 6px; color: var(--accent);
+  font-weight: 500; font-size: .85rem; text-decoration: underline;
+}

@@ -390,6 +390,51 @@
     }
   }
 
+  // ---------- tier descriptions ----------
+
+  function fmtTimes(str) {
+    const list = ICS.parseTimes(str).map(t => `${String(t.h).padStart(2, '0')}:${String(t.m).padStart(2, '0')}`);
+    if (!list.length) return 'no times set';
+    return list.length === 1 ? list[0] : list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1];
+  }
+
+  function openTiers() {
+    const s = state.settings;
+    const count = t => state.people.filter(p => p.tier === t).length;
+    const t3 = ICS.parseTimes(s.t3).slice(0, 1);
+    const tiers = [
+      {
+        n: 1, title: 'Must remember',
+        app: 'A huge banner at the top of the app all day, a heads-up banner during the 7 days before, and the biggest card in the list.',
+        cal: `${s.t1DayBefore ? 'An alert the evening before (20:00), then alerts' : 'Alerts'} on the day at ${fmtTimes(s.t1)}.`,
+      },
+      {
+        n: 2, title: 'Important',
+        app: 'A banner at the top of the app on the day.',
+        cal: `Two reminders on the day, morning and evening: ${fmtTimes(s.t2)}.`,
+      },
+      {
+        n: 3, title: 'Normal',
+        app: 'Its card is highlighted on the day.',
+        cal: t3.length ? `One reminder on the day at ${String(t3[0].h).padStart(2, '0')}:${String(t3[0].m).padStart(2, '0')}.` : 'One reminder on the day (no time set).',
+      },
+      {
+        n: 4, title: 'In-app only',
+        app: 'A smaller card in the list.',
+        cal: 'No reminders. Left out of the calendar export.',
+      },
+    ];
+    $('#tiers-list').innerHTML = tiers.map(t => {
+      const c = count(t.n);
+      return `<div class="tier-info tier-${t.n}">
+        <div class="tier-info-head"><span class="tier-badge">T${t.n}</span><b>${t.title}</b><span class="muted tier-count">${c} ${c === 1 ? 'person' : 'people'}</span></div>
+        <p><span class="tier-label">In the app:</span> ${t.app}</p>
+        <p><span class="tier-label">Calendar:</span> ${t.cal}</p>
+      </div>`;
+    }).join('');
+    $('#tiers-dialog').showModal();
+  }
+
   // ---------- settings ----------
 
   function openSettings() {
@@ -446,6 +491,8 @@
   $('#tier-filter').addEventListener('change', e => { state.tier = e.target.value; resetList(); });
 
   $('#btn-settings').addEventListener('click', openSettings);
+  $('#btn-tiers').addEventListener('click', openTiers);
+  $('#btn-tiers-help').addEventListener('click', openTiers);
   $('#settings-form').addEventListener('input', saveSettingsFromForm);
   $('#btn-import').addEventListener('click', () => $('#file-input').click());
   $('#file-input').addEventListener('change', onFileChosen);

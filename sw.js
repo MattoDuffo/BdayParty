@@ -1,5 +1,5 @@
 /* Offline support: serve the app shell from cache, refresh it in the background. */
-const CACHE = 'bdayparty-v1';
+const CACHE = 'bdayparty-v2';
 const SHELL = [
   './', 'index.html', 'styles.css', 'astro.js', 'data.js', 'ics.js', 'app.js',
   'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
