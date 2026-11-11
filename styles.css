@@ -108,6 +108,13 @@ main { max-width: 720px; margin: 0 auto; padding: 0 16px; }
 .card.tier-3 { --tc: var(--t3); }
 .card.tier-4 { --tc: var(--t4); padding: 9px 12px; opacity: .92; }
 .card.tier-4 .chips { font-size: .78rem; }
+.card.is-past { opacity: .6; box-shadow: none; }
+.card.is-past .rel { color: var(--muted); }
+.today-divider {
+  display: flex; align-items: center; gap: 10px; margin: 18px 0 4px;
+  color: var(--accent); font-weight: 700; font-size: .85rem; text-transform: uppercase; letter-spacing: .08em;
+}
+.today-divider::before, .today-divider::after { content: ""; flex: 1; height: 2px; background: var(--accent); opacity: .5; }
 .card.is-today { background: linear-gradient(135deg, rgba(236, 72, 153, .12), rgba(124, 58, 237, .12)), var(--surface); }
 
 .date-block {

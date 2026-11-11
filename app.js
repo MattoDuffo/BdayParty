@@ -5,6 +5,7 @@
   const A = window.Astro, D = window.Data;
   const $ = sel => document.querySelector(sel);
   const BATCH = 40;
+  const PAST_DAYS = 10; // the list starts this many days before today
 
   const state = {
     people: D.loadPeople(),
@@ -90,6 +91,8 @@
   // ---------- rendering ----------
 
   function relLabel(days) {
+    if (days === -1) return 'Yesterday';
+    if (days < 0) return `${-days} days ago`;
     if (days === 0) return 'Today! 🎉';
     if (days === 1) return 'Tomorrow';
     if (days < 7) return `in ${days} days`;
@@ -114,8 +117,9 @@
       bornDow ? `<span class="chip" title="Day of the week they were born">Born on a ${bornDow}</span>` : '',
       feb29 ? `<span class="chip" title="Born Feb 29 — celebrated Feb 28 this year">🐸 Leap day</span>` : '',
     ].join('');
-    const ageText = occ.age !== null ? `Turns <b>${occ.age}</b>` : '<span class="muted">Age unknown</span>';
-    const today = occ.daysUntil === 0 ? ' is-today' : '';
+    const past = occ.daysUntil < 0;
+    const ageText = occ.age !== null ? `${past ? 'Turned' : 'Turns'} <b>${occ.age}</b>` : '<span class="muted">Age unknown</span>';
+    const today = occ.daysUntil === 0 ? ' is-today' : past ? ' is-past' : '';
     return `
       <button class="card tier-${p.tier}${today}" data-id="${esc(p.id)}">
         <div class="date-block">
@@ -136,9 +140,9 @@
 
   function resetList() {
     state.today = A.startOfDay(new Date());
-    const today = state.today;
+    const start = new Date(state.today.getFullYear(), state.today.getMonth(), state.today.getDate() - PAST_DAYS);
     state.order = filteredPeople()
-      .map(p => ({ p, first: nextYearFor(p, today) }))
+      .map(p => ({ p, first: nextYearFor(p, start) }))
       .sort((a, b) => {
         const da = A.celebrationDate(a.first, a.p.month, a.p.day);
         const db = A.celebrationDate(b.first, b.p.month, b.p.day);
@@ -146,6 +150,8 @@
       });
     state.rendered = 0;
     state.lastHeader = '';
+    state.hadPast = false;
+    state.todayMarked = false;
     $('#list').innerHTML = '';
     $('#empty').classList.toggle('hidden', state.people.length > 0);
     if (state.people.length > 0 && state.order.length === 0) {
@@ -165,6 +171,11 @@
       const lap = Math.floor(i / n);
       const entry = state.order[i % n];
       const occ = occurrence(entry.p, entry.first + lap, state.today);
+      if (occ.daysUntil < 0) state.hadPast = true;
+      else if (!state.todayMarked) {
+        state.todayMarked = true;
+        if (state.hadPast) parts.push('<div class="today-divider"><span>Today · upcoming</span></div>');
+      }
       const header = `${A.MONTHS[occ.date.getMonth()]} ${occ.date.getFullYear()}`;
       if (header !== state.lastHeader) {
         parts.push(`<h2 class="month-header">${header}</h2>`);
