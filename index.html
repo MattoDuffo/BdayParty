@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>BdayParty</title>
+  <meta name="description" content="Track your friends' birthdays.">
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BdayParty">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>🎈 BdayParty</h1>
+    <div class="topbar-actions">
+      <button id="btn-settings" class="icon-btn" aria-label="Settings & import">⚙️</button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="Search names…" autocomplete="off">
+    <select id="tier-filter" aria-label="Filter by tier">
+      <option value="">All tiers</option>
+      <option value="1">Tier 1</option>
+      <option value="2">Tier 2</option>
+      <option value="3">Tier 3</option>
+      <option value="4">Tier 4</option>
+    </select>
+  </div>
+
+  <main>
+    <section id="today-banners"></section>
+    <section id="list" aria-live="polite"></section>
+    <div id="sentinel"></div>
+    <div id="empty" class="empty hidden">
+      <p class="empty-big">🎂</p>
+      <p>No birthdays yet.</p>
+      <p>Tap <b>＋</b> to add one, or <b>⚙️ → Import</b> to load a JSON / CSV file.</p>
+    </div>
+  </main>
+
+  <button id="btn-add" class="fab" aria-label="Add birthday">＋</button>
+
+  <!-- Edit / add dialog -->
+  <dialog id="edit-dialog">
+    <form id="edit-form" method="dialog">
+      <h2 id="edit-title">Edit birthday</h2>
+      <label>Name <input name="name" required maxlength="100"></label>
+      <div class="row3">
+        <label>Day <input name="day" type="number" min="1" max="31" required inputmode="numeric"></label>
+        <label>Month
+          <select name="month" required></select>
+        </label>
+        <label>Year <input name="year" type="number" min="1900" max="2100" placeholder="optional" inputmode="numeric"></label>
+      </div>
+      <fieldset class="tiers">
+        <legend>Tier</legend>
+        <label><input type="radio" name="tier" value="1"><span><b>1</b> Must remember</span></label>
+        <label><input type="radio" name="tier" value="2"><span><b>2</b> Important (am + pm)</span></label>
+        <label><input type="radio" name="tier" value="3"><span><b>3</b> Once a day</span></label>
+        <label><input type="radio" name="tier" value="4"><span><b>4</b> In-app only</span></label>
+      </fieldset>
+      <label>Notes <textarea name="notes" rows="5" placeholder="Gift ideas, how you met, partner's name…"></textarea></label>
+      <p id="edit-error" class="error"></p>
+      <div class="dialog-actions">
+        <button type="button" id="btn-delete" class="danger">Delete</button>
+        <span class="spacer"></span>
+        <button type="button" id="btn-cancel">Cancel</button>
+        <button type="submit" id="btn-save" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Generic confirm dialog -->
+  <dialog id="confirm-dialog">
+    <form method="dialog">
+      <h2 id="confirm-title">Are you sure?</h2>
+      <div id="confirm-body"></div>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button value="cancel">Cancel</button>
+        <button value="ok" id="confirm-ok" class="primary">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Import preview dialog -->
+  <dialog id="import-dialog">
+    <form method="dialog">
+      <h2>Import preview</h2>
+      <div id="import-summary"></div>
+      <div id="import-table-wrap"><table id="import-table"></table></div>
+      <label class="check"><input type="checkbox" id="import-skip-dupes" checked> Skip entries that already exist (same name &amp; date)</label>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button value="cancel">Cancel</button>
+        <button value="ok" class="primary">Import</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Settings dialog -->
+  <dialog id="settings-dialog">
+    <form method="dialog" id="settings-form">
+      <h2>Settings</h2>
+
+      <h3>📅 Calendar reminders</h3>
+      <p class="hint">Exports an <code>.ics</code> file. Open it on your iPhone to add every birthday to Calendar, with alerts set by tier. Re-export after you make changes.</p>
+      <label>Tier 1 alert times <input name="t1" placeholder="08:00, 12:00, 17:00, 20:00"></label>
+      <label class="check"><input type="checkbox" name="t1DayBefore"> Tier 1: also alert the evening before (20:00)</label>
+      <label>Tier 2 alert times <input name="t2" placeholder="09:00, 19:00"></label>
+      <label>Tier 3 alert time <input name="t3" placeholder="09:00"></label>
+      <p class="hint">Tier 4 birthdays are left out of the calendar.</p>
+      <div class="btn-row">
+        <button type="button" id="btn-ics" class="primary">Export to Calendar (.ics)</button>
+        <button type="button" id="btn-ics-share">Share .ics…</button>
+      </div>
+
+      <h3>📥 Import / 📤 Backup</h3>
+      <p class="hint">Import a <code>.json</code> or <code>.csv</code> file. Columns: <code>name, day, month, year, tier, notes</code> (or one <code>birthday</code> column like <code>1990-05-21</code>). <a href="templates/birthdays-template.csv" download>CSV template</a> · <a href="templates/birthdays-template.json" download>JSON template</a></p>
+      <div class="btn-row">
+        <button type="button" id="btn-import">Import file…</button>
+        <button type="button" id="btn-export">Export backup (JSON)</button>
+      </div>
+      <input type="file" id="file-input" accept=".json,.csv,application/json,text/csv,text/plain" hidden>
+
+      <h3>⚠️ Danger zone</h3>
+      <div class="btn-row">
+        <button type="button" id="btn-clear" class="danger">Delete all birthdays</button>
+      </div>
+
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button value="close" class="primary">Done</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="astro.js"></script>
+  <script src="data.js"></script>
+  <script src="ics.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

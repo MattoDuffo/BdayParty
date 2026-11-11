@@ -1,0 +1,6 @@
+[
+  { "name": "Alex Example", "day": 21, "month": 5, "year": 1990, "tier": 1, "notes": "Best friend. Likes sushi, hates surprises." },
+  { "name": "Sam Sample", "day": 3, "month": 11, "year": null, "tier": 2, "notes": "Year unknown" },
+  { "name": "Jordan Demo", "day": 29, "month": 2, "year": 1996, "tier": 3, "notes": "Leap day baby" },
+  { "name": "Taylor Test", "day": 14, "month": 7, "year": 1985, "tier": 4, "notes": "" }
+]
