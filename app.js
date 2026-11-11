@@ -138,7 +138,34 @@
       </button>`;
   }
 
-  function resetList() {
+  // Remember where a card sits on screen so we can come back to it after an edit.
+  // The same person appears once per year in the list, so we anchor on the
+  // card's position in the list (not just the scroll offset, which shifts when
+  // earlier copies of the same person change size).
+  function captureAnchor(el) {
+    const cards = [...document.querySelectorAll('#list .card')];
+    if (!el || !cards.includes(el)) {
+      el = cards.find(c => c.getBoundingClientRect().bottom > 80) || null;
+    }
+    state.anchor = el ? { index: cards.indexOf(el), top: el.getBoundingClientRect().top } : null;
+  }
+
+  // Rebuild the list and return to exactly the same spot (used after edits).
+  function refreshInPlace() {
+    const a = state.anchor;
+    const y = window.scrollY;
+    resetList(Math.max(state.rendered, a ? a.index + 1 : 0));
+    const restore = () => {
+      const cards = document.querySelectorAll('#list .card');
+      if (!a || !cards.length) { window.scrollTo(0, y); return; }
+      const c = cards[Math.min(a.index, cards.length - 1)];
+      window.scrollBy(0, c.getBoundingClientRect().top - a.top);
+    };
+    restore();
+    requestAnimationFrame(restore); // again after layout settles (iOS)
+  }
+
+  function resetList(minItems = 0) {
     state.today = A.startOfDay(new Date());
     const start = new Date(state.today.getFullYear(), state.today.getMonth(), state.today.getDate() - PAST_DAYS);
     state.order = filteredPeople()
@@ -159,6 +186,7 @@
     }
     renderBanners();
     renderMore();
+    while (state.order.length && state.rendered < minItems) renderMore();
   }
 
   // Each "lap" through the sorted list is one more year, so the list never ends.
@@ -230,8 +258,9 @@
     form.month.innerHTML = A.MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
   })();
 
-  function openEditor(person) {
+  function openEditor(person, anchorEl) {
     editing = person || null;
+    captureAnchor(anchorEl);
     $('#edit-title').textContent = person ? 'Edit birthday' : 'Add birthday';
     $('#btn-delete').classList.toggle('hidden', !person);
     $('#edit-error').textContent = '';
@@ -269,7 +298,7 @@
       state.people.push(updated);
       persist();
       editDlg.close();
-      resetList();
+      refreshInPlace();
       toast(`Added ${updated.name} 🎈`);
       return;
     }
@@ -299,7 +328,7 @@
     if (idx >= 0) state.people[idx] = updated;
     persist();
     editDlg.close();
-    resetList();
+    refreshInPlace();
     toast('Saved ✔');
   }
 
@@ -310,7 +339,7 @@
     state.people = state.people.filter(p => p.id !== editing.id);
     persist();
     editDlg.close();
-    resetList();
+    refreshInPlace();
     toast('Deleted');
   }
 
@@ -484,7 +513,7 @@
     const el = e.target.closest('[data-id]');
     if (!el) return;
     const p = state.people.find(x => x.id === el.dataset.id);
-    if (p) openEditor(p);
+    if (p) openEditor(p, el.closest('#list') ? el : null);
   }
 
   $('#list').addEventListener('click', onCardClick);
